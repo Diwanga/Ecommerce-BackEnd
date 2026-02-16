@@ -1,0 +1,52 @@
+{
+  "dashboard": {
+    "title": "Saga Orchestration Flow",
+    "panels": [
+      {
+        "title": "Order Status Distribution",
+        "targets": [
+          {
+            "expr": "order_status_total"
+          }
+        ],
+        "type": "piechart"
+      },
+      {
+        "title": "Saga Completion Rate",
+        "targets": [
+          {
+            "expr": "rate(saga_completed_total[5m])"
+          }
+        ],
+        "type": "graph"
+      },
+      {
+        "title": "Saga Compensation Rate",
+        "targets": [
+          {
+            "expr": "rate(saga_compensated_total[5m])"
+          }
+        ],
+        "type": "graph"
+      },
+      {
+        "title": "Payment Success Rate",
+        "targets": [
+          {
+            "expr": "rate(payment_completed_total[5m]) / rate(payment_requests_total[5m])"
+          }
+        ],
+        "type": "gauge"
+      },
+      {
+        "title": "Inventory Stock Levels",
+        "targets": [
+          {
+            "expr": "inventory_available_stock"
+          }
+        ],
+        "type": "graph"
+      }
+    ]
+  }
+}

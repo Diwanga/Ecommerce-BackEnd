@@ -1,0 +1,169 @@
+{
+  "dashboard": {
+    "title": "Saga Orchestration Monitoring",
+    "tags": ["saga", "distributed-transactions"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Saga Completion Rate",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "(sum(saga_completed_total) / sum(saga_started_total)) * 100",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 70},
+                {"color": "green", "value": 90}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Saga Status Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 8, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "count(saga_status{job=\"saga-orchestrator\"}) by (status)",
+            "legendFormat": "{{status}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Active Sagas",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 6, "x": 14, "y": 0},
+        "targets": [
+          {
+            "expr": "count(saga_status{job=\"saga-orchestrator\", status=~\"PAYMENT_PENDING|INVENTORY_PENDING|COMPENSATING\"})",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 10},
+                {"color": "red", "value": 50}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Saga Throughput (sagas/min)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(saga_started_total{job=\"saga-orchestrator\"}[1m]) * 60",
+            "legendFormat": "Started",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(saga_completed_total{job=\"saga-orchestrator\"}[1m]) * 60",
+            "legendFormat": "Completed",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(saga_compensated_total{job=\"saga-orchestrator\"}[1m]) * 60",
+            "legendFormat": "Compensated",
+            "refId": "C"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Saga Duration (p95)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(saga_duration_seconds_bucket{job=\"saga-orchestrator\"}[5m])) by (le))",
+            "legendFormat": "p95 Duration",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(saga_duration_seconds_bucket{job=\"saga-orchestrator\"}[5m])) by (le))",
+            "legendFormat": "p50 Duration",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Step Failure Reasons",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "topk(10, sum(saga_step_failed_total{job=\"saga-orchestrator\"}) by (step_name, error_reason))",
+            "format": "table",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Compensation Success Rate",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "(sum(saga_compensated_total{job=\"saga-orchestrator\"}) / (sum(saga_compensated_total{job=\"saga-orchestrator\"}) + sum(saga_compensation_failed_total{job=\"saga-orchestrator\"}))) * 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100,
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 90},
+                {"color": "green", "value": 95}
+              ]
+            }
+          }
+        }
+      }
+    ]
+  },
+  "overwrite": true
+}

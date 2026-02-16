@@ -1,0 +1,4 @@
+com/orderms/gateway/filter/LoggingFilter.class
+com/orderms/gateway/config/GatewayConfig.class
+com/orderms/gateway/filter/FallbackController.class
+com/orderms/gateway/ApiGatewayApplication.class

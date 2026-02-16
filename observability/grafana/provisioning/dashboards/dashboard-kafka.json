@@ -1,0 +1,116 @@
+{
+  "dashboard": {
+    "title": "Kafka Messaging Monitoring",
+    "tags": ["kafka", "messaging"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Kafka Producer Send Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(kafka_producer_record_send_total{job=~\".*-service|saga-orchestrator\"}[1m])",
+            "legendFormat": "{{job}} - {{topic}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "msg/s"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Kafka Consumer Lag",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "kafka_consumer_lag{job=~\".*-service|saga-orchestrator\"}",
+            "legendFormat": "{{job}} - {{topic}} - {{partition}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Messages Consumed per Service",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(kafka_consumer_records_consumed_total{job=~\".*-service|saga-orchestrator\"}[1m])",
+            "legendFormat": "{{job}} - {{topic}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "msg/s"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Kafka Producer Error Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(kafka_producer_record_error_total{job=~\".*-service|saga-orchestrator\"}[1m])",
+            "legendFormat": "{{job}} - {{topic}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "msg/s"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Topic Message Rate",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "sum(rate(kafka_producer_record_send_total[1m])) by (topic)",
+            "format": "table",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Consumer Group Processing Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(kafka_consumer_processing_seconds_bucket{job=~\".*-service|saga-orchestrator\"}[5m])) by (job, le))",
+            "legendFormat": "{{job}} p95",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s"
+          }
+        }
+      }
+    ]
+  },
+  "overwrite": true
+}

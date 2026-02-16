@@ -1,0 +1,142 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+prometheus.scrape "eureka_server" {
+  targets = [{
+    __address__ = "eureka-server:8761",
+    job         = "eureka-server",
+  }]
+  forward_to      = [prometheus.remote_write.default.receiver]
+  scrape_interval = "15s"
+  metrics_path    = "/actuator/prometheus"
+}
+
+prometheus.scrape "api_gateway" {
+  targets = [{
+    __address__ = "api-gateway:8060",
+    job         = "api-gateway",
+  }]
+  forward_to      = [prometheus.remote_write.default.receiver]
+  scrape_interval = "15s"
+  metrics_path    = "/actuator/prometheus"
+}
+
+prometheus.scrape "order_service" {
+  targets = [{
+    __address__ = "order-service:8081",
+    job         = "order-service",
+  }]
+  forward_to      = [prometheus.remote_write.default.receiver]
+  scrape_interval = "15s"
+  metrics_path    = "/actuator/prometheus"
+}
+
+prometheus.scrape "payment_service" {
+  targets = [{
+    __address__ = "payment-service:8082",
+    job         = "payment-service",
+  }]
+  forward_to      = [prometheus.remote_write.default.receiver]
+  scrape_interval = "15s"
+  metrics_path    = "/actuator/prometheus"
+}
+
+prometheus.scrape "inventory_service_1" {
+  targets = [{
+    __address__ = "inventory-service-1:8083",
+    job         = "inventory-service",
+    instance    = "1",
+  }]
+  forward_to = [prometheus.remote_write.default.receiver]
+  scrape_interval = "15s"
+  metrics_path = "/actuator/prometheus"
+}
+
+prometheus.scrape "inventory_service_2" {
+  targets = [{
+    __address__ = "inventory-service-2:8083",
+    job         = "inventory-service",
+    instance    = "2",
+  }]
+  forward_to = [prometheus.remote_write.default.receiver]
+  scrape_interval = "15s"
+  metrics_path = "/actuator/prometheus"
+}
+
+prometheus.scrape "inventory_service_3" {
+  targets = [{
+    __address__ = "inventory-service-3:8083",
+    job         = "inventory-service",
+    instance    = "3",
+  }]
+  forward_to = [prometheus.remote_write.default.receiver]
+  scrape_interval = "15s"
+  metrics_path = "/actuator/prometheus"
+}
+
+prometheus.scrape "saga_orchestrator" {
+  targets = [{
+    __address__ = "saga-orchestrator:8085",
+    job         = "saga-orchestrator",
+  }]
+  forward_to = [prometheus.remote_write.default.receiver]
+  scrape_interval = "15s"
+  metrics_path = "/actuator/prometheus"
+}
+
+prometheus.scrape "notification_service" {
+  targets = [{
+    __address__ = "notification-service:8084",
+    job         = "notification-service",
+  }]
+  forward_to = [prometheus.remote_write.default.receiver]
+  scrape_interval = "15s"
+  metrics_path = "/actuator/prometheus"
+}
+
+prometheus.remote_write "default" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+  }
+}
+
+discovery.docker "all" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "logs" {
+  targets = discovery.docker.all.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "app"
+  }
+}
+
+loki.source.docker "all" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.logs.output
+  forward_to = [loki.write.endpoint.receiver]
+}
+
+loki.write "endpoint" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
+
+prometheus.exporter.self "alloy" { }
+
+prometheus.scrape "alloy" {
+  targets    = prometheus.exporter.self.alloy.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+  job_name   = "alloy"
+}
